@@ -21,9 +21,13 @@
         .mode-btn { background: var(--gray); border: 1px solid #ddd; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
         .mode-btn.active { background: var(--red); color: white; border-color: var(--red); }
 
-        .result-box { background: var(--black); color: white; padding: 25px; border-radius: 20px; margin: 20px 0; }
+        .result-box { background: var(--black); color: white; padding: 25px; border-radius: 20px; margin: 20px 0; position: relative; }
         .result { font-size: 3.5rem; font-weight: 900; color: var(--yellow); display: block; line-height: 1; }
         .label { font-size: 0.8rem; text-transform: uppercase; opacity: 0.7; letter-spacing: 1px; }
+
+        /* Кнопка копіювання */
+        .btn-copy { background: #333; color: #fff; border: none; padding: 8px 15px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; margin-top: 15px; transition: 0.2s; }
+        .btn-copy:hover { background: #444; }
 
         .btn-coffee { display: inline-block; background: var(--yellow); color: black; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: bold; margin-top: 15px; border: 2px solid black; box-shadow: 0 4px 0 black; transition: 0.2s; }
         .btn-coffee:hover { transform: translateY(-2px); box-shadow: 0 6px 0 black; }
@@ -35,7 +39,7 @@
 <body>
 
 <nav>
-    <a href="/" id="nav-back">⬅ Back to Hub</a>
+    <a href="https://bricks-repo.github.io/" id="nav-back">⬅ Back to Hub</a>
     <div class="lang-btns">
         <button onclick="changeLang('en')">EN</button>
         <button onclick="changeLang('ua')">UA</button>
@@ -43,7 +47,7 @@
 </nav>
 
 <div class="container">
-    <h2 id="t-title">Bricks-to-Weight</h2>
+    <h2 id="t-title">Weight Calculator</h2>
     
     <div class="modes">
         <button class="mode-btn active" onclick="setMode(1.5, this)" id="m-mix">Mixed</button>
@@ -57,17 +61,19 @@
     <div class="result-box">
         <span class="result" id="res">0</span>
         <span class="label" id="t-pieces">Estimated Pieces</span>
+        <button class="btn-copy" onclick="copyResult()" id="t-copy">📋 Copy Report</button>
     </div>
 
-    <a href="https://buymeacoffee.com/YOUR_USER" class="btn-coffee" id="t-coffee">☕ Support Project</a>
+    <a href="#" target="_blank" class="btn-coffee" id="t-coffee">☕ Support Project</a>
 
     <div class="feedback">
-        <p id="t-idea">💡 Idea for a tool? <a href="ВАША_ФОРМА" target="_blank" id="t-suggest">Suggest here</a></p>
+        <p id="t-idea">💡 Idea for a tool? <a href="#" target="_blank" id="t-suggest">Suggest here</a></p>
     </div>
 </div>
 
 <script>
     let currentRatio = 1.5;
+    let currentPieces = 0;
 
     const i18n = {
         en: {
@@ -78,7 +84,9 @@
             't-coffee': "☕ Support Project",
             't-suggest': "Suggest here",
             'm-mix': "Mixed", 'm-tech': "Technic", 'm-small': "Small",
-            't-idea': "💡 Idea for a tool? "
+            't-idea': "💡 Idea for a tool? ",
+            't-copy': "📋 Copy Report",
+            'copied': "Copied!"
         },
         ua: {
             'nav-back': "⬅ Назад до Хабу",
@@ -88,9 +96,30 @@
             't-coffee': "☕ Підтримати проект",
             't-suggest': "Напишіть нам",
             'm-mix': "Суміш", 'm-tech': "Технік", 'm-small': "Дрібні",
-            't-idea': "💡 Маєте ідею? "
+            't-idea': "💡 Маєте ідею? ",
+            't-copy': "📋 Копіювати звіт",
+            'copied': "Скопійовано!"
         }
     };
+
+    // Синхронізація посилань з вашим головним хабом bricks-repo
+    async function syncLinks() {
+        try {
+            const registryUrl = 'https://bricks-repo.github.io/hub-registry.json'; 
+            const response = await fetch(registryUrl);
+            const data = await response.json();
+            
+            if (data.settings) {
+                const supportBtn = document.getElementById('t-coffee');
+                const suggestBtn = document.getElementById('t-suggest');
+
+                if (supportBtn && data.settings.support_url) supportBtn.href = data.settings.support_url;
+                if (suggestBtn && data.settings.suggestion_url) suggestBtn.href = data.settings.suggestion_url;
+            }
+        } catch (e) {
+            console.error("Hub Sync failed:", e);
+        }
+    }
 
     function setMode(ratio, btn) {
         currentRatio = ratio;
@@ -101,8 +130,26 @@
 
     function calculate() {
         let weight = document.getElementById('weight').value;
-        let count = Math.round(weight / currentRatio);
-        document.getElementById('res').innerText = weight > 0 ? count.toLocaleString() : 0;
+        currentPieces = Math.round(weight / currentRatio);
+        document.getElementById('res').innerText = weight > 0 ? currentPieces.toLocaleString() : 0;
+    }
+
+    // Функція копіювання звіту для оголошень
+    function copyResult() {
+        const weight = document.getElementById('weight').value;
+        if (!weight || weight <= 0) return;
+
+        const lang = localStorage.getItem('bricks_lang') || 'en';
+        const text = lang === 'ua' 
+            ? `📊 Звіт LEGO: Вага: ${weight}г. Орієнтовна кількість деталей: ~${currentPieces} шт. Розраховано через Bricks-Repo.`
+            : `📊 LEGO Report: Weight: ${weight}g. Estimated parts: ~${currentPieces} pcs. Calculated via Bricks-Repo.`;
+
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('t-copy');
+            const originalText = i18n[lang]['t-copy'];
+            btn.innerText = i18n[lang]['copied'];
+            setTimeout(() => { btn.innerText = originalText; }, 2000);
+        });
     }
 
     function changeLang(lang) {
@@ -119,6 +166,7 @@
 
     const savedLang = localStorage.getItem('bricks_lang') || (navigator.language.includes('uk') ? 'ua' : 'en');
     applyLang(savedLang);
+    syncLinks();
 </script>
 
 </body>
