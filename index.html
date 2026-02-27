@@ -20,7 +20,8 @@
         .result { font-size: 3.5rem; font-weight: 900; color: var(--yellow); display: block; line-height: 1; }
         .report-preview { display: none; background: #222; margin-top: 20px; padding: 15px; border-radius: 12px; text-align: left; font-size: 0.85rem; color: #ccc; white-space: pre-line; }
         .btn-copy { background: var(--yellow); color: black; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-coffee { display: inline-block; background: var(--yellow); color: black; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: bold; margin-top: 20px; border: 2px solid black; box-shadow: 0 4px 0 black; }
+        .btn-coffee { display: inline-block; background: var(--yellow); color: black; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: bold; margin-top: 20px; border: 2px solid black; box-shadow: 0 4px 0 black; transition: 0.2s; }
+        .btn-coffee:hover { transform: translateY(-2px); box-shadow: 0 6px 0 black; }
         .feedback { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; font-size: 0.85rem; color: #888; }
         .feedback a { color: var(--red); font-weight: bold; text-decoration: underline; }
     </style>
@@ -73,7 +74,8 @@
             't-copy': "📋 Copy Report", 
             'copied': "Copied!", 
             'm-mix': "Mixed", 'm-tech': "Technic", 'm-small': "Small", 
-            'idea-html': '💡 Idea for a tool? <a href="{s}" target="_blank" id="link-suggest">Suggest here</a>',
+            'link-support': "☕ Support Project",
+            'idea-html': '💡 Idea for a tool? <a href="{s}" target="_blank">Suggest here</a>',
             'report': "📊 LEGO Report:\nWeight: {w}g\nEstimated: ~{p} pcs.\nCalculated via Bricks Repo Calculator ({u})" 
         },
         ua: { 
@@ -83,7 +85,8 @@
             't-copy': "📋 Копіювати звіт", 
             'copied': "Скопійовано!", 
             'm-mix': "Суміш", 'm-tech': "Технік", 'm-small': "Дрібні", 
-            'idea-html': '💡 Маєте ідею? <a href="{s}" target="_blank" id="link-suggest">Напишіть нам</a>',
+            'link-support': "☕ Підтримати проект",
+            'idea-html': '💡 Маєте ідею? <a href="{s}" target="_blank">Напишіть нам</a>',
             'report': "📊 LEGO Звіт:\nВага: {w}г\nКількість: ~{p} шт.\nРозраховано через Bricks Repo Calculator ({u})" 
         }
     };
@@ -125,24 +128,24 @@
     function changeLang(l) {
         localStorage.setItem('bricks_lang', l);
         
-        // Оновлення всіх текстових елементів по ID
-        const ids = ['t-title', 't-desc', 't-pieces', 't-copy', 'm-mix', 'm-tech', 'm-small'];
+        // Масив усіх ID, які треба просто замінити текстом
+        const ids = ['t-title', 't-desc', 't-pieces', 't-copy', 'm-mix', 'm-tech', 'm-small', 'link-support'];
         ids.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.innerText = i18n[l][id];
         });
 
-        // Оновлення блоку ідеї
+        // Оновлення блоку ідеї (зберігаючи структуру посилання)
         document.getElementById('t-idea-wrap').innerHTML = i18n[l]['idea-html'].replace('{s}', CONFIG.suggestion_url);
         
         calculate();
     }
 
-    // Прив'язка посилань з CONFIG
+    // Прив'язка посилань з CONFIG при завантаженні (одноразово)
     document.getElementById('link-hub').href = CONFIG.hub_url;
     document.getElementById('link-support').href = CONFIG.support_url;
 
-    // Старт
+    // Старт перекладу
     changeLang(localStorage.getItem('bricks_lang') || 'en');
 </script>
 </body>
