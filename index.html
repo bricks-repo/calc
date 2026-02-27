@@ -21,21 +21,33 @@
         .mode-btn { background: var(--gray); border: 1px solid #ddd; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
         .mode-btn.active { background: var(--red); color: white; border-color: var(--red); }
 
-        .result-box { background: var(--black); color: white; padding: 25px; border-radius: 20px; margin: 20px 0; position: relative; }
+        .result-box { background: var(--black); color: white; padding: 25px; border-radius: 20px; margin: 20px 0; }
         .result { font-size: 3.5rem; font-weight: 900; color: var(--yellow); display: block; line-height: 1; }
         .label { font-size: 0.8rem; text-transform: uppercase; opacity: 0.7; letter-spacing: 1px; }
 
-        .btn-copy { background: #333; color: #fff; border: none; padding: 10px 15px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; margin-top: 15px; transition: 0.2s; width: 100%; font-weight: bold; }
-        .btn-copy:hover { background: #444; }
-        .btn-copy:disabled { background: #222; color: #555; cursor: not-allowed; }
-
-        .info-text { font-size: 0.75rem; color: #666; margin-top: 8px; font-style: italic; }
+        /* Блок візуального репорту */
+        .report-preview { 
+            display: none; /* Сховано за замовчуванням */
+            background: #222; margin-top: 20px; padding: 15px; border-radius: 12px; 
+            text-align: left; font-size: 0.85rem; color: #ccc; border: 1px solid #333;
+            white-space: pre-line; position: relative;
+        }
+        
+        .btn-copy { 
+            background: var(--yellow); color: black; border: none; padding: 10px; 
+            border-radius: 8px; font-size: 0.8rem; cursor: pointer; margin-top: 10px; 
+            width: 100%; font-weight: bold; transition: 0.2s;
+        }
+        .btn-copy:hover { transform: scale(1.02); }
 
         .btn-coffee { display: inline-block; background: var(--yellow); color: black; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: bold; margin-top: 25px; border: 2px solid black; box-shadow: 0 4px 0 black; transition: 0.2s; }
         .btn-coffee:hover { transform: translateY(-2px); box-shadow: 0 6px 0 black; }
 
         .feedback { margin-top: 30px; font-size: 0.85rem; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
-        .feedback a { color: var(--red); font-weight: bold; text-decoration: underline; cursor: pointer; }
+        .feedback a { 
+            color: var(--red); font-weight: bold; text-decoration: underline !important; 
+            display: inline-block; position: relative; z-index: 10; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -64,14 +76,16 @@
         <span class="result" id="res">0</span>
         <span class="label" id="t-pieces">Estimated Pieces</span>
         
-        <button class="btn-copy" onclick="copyResult()" id="t-copy" disabled>📋 Copy Report</button>
-        <p class="info-text" id="t-info">Ready text for your sale listing (OLX, eBay, etc.)</p>
+        <div id="report-container" class="report-preview">
+            <div id="report-text"></div>
+            <button class="btn-copy" onclick="copyResult()" id="t-copy">📋 Copy Report</button>
+        </div>
     </div>
 
     <a href="#" target="_blank" class="btn-coffee" id="t-coffee">☕ Support Project</a>
 
     <div class="feedback">
-        <p id="t-idea">💡 Idea for a tool? <a href="#" target="_blank" id="t-suggest">Suggest here</a></p>
+        <p id="t-idea">💡 Idea for a tool? <a href="#" target="_blank" id="t-suggest" rel="noopener">Suggest here</a></p>
     </div>
 </div>
 
@@ -90,8 +104,8 @@
             'm-mix': "Mixed", 'm-tech': "Technic", 'm-small': "Small",
             't-idea': "💡 Idea for a tool? ",
             't-copy': "📋 Copy Report",
-            't-info': "Generates ready-to-paste text for your listing",
-            'copied': "Copied!"
+            'copied': "Copied!",
+            'report_tmpl': "📊 LEGO Report:\nWeight: {w}g\nEstimated parts: ~{p} pcs.\nCalculated via Bricks-Repo."
         },
         ua: {
             'nav-back': "⬅ Назад до Хабу",
@@ -103,8 +117,8 @@
             'm-mix': "Суміш", 'm-tech': "Технік", 'm-small': "Дрібні",
             't-idea': "💡 Маєте ідею? ",
             't-copy': "📋 Копіювати звіт",
-            't-info': "Створює готовий текст для вашого оголошення (OLX тощо)",
-            'copied': "Скопійовано!"
+            'copied': "Скопійовано!",
+            'report_tmpl': "📊 LEGO Звіт:\nВага: {w}г\nОрієнтовна кількість деталей: ~{p} шт.\nРозраховано через Bricks-Repo."
         }
     };
 
@@ -118,12 +132,8 @@
                 const supportBtn = document.getElementById('t-coffee');
                 const suggestBtn = document.getElementById('t-suggest');
 
-                if (supportBtn && data.settings.support_url) {
-                    supportBtn.href = data.settings.support_url;
-                }
-                if (suggestBtn && data.settings.suggestion_url) {
-                    suggestBtn.href = data.settings.suggestion_url;
-                }
+                if (supportBtn && data.settings.support_url) supportBtn.href = data.settings.support_url;
+                if (suggestBtn && data.settings.suggestion_url) suggestBtn.href = data.settings.suggestion_url;
             }
         } catch (e) {
             console.error("Hub Sync failed:", e);
@@ -138,31 +148,29 @@
     }
 
     function calculate() {
-        let weightInput = document.getElementById('weight');
-        let weight = weightInput.value;
-        const copyBtn = document.getElementById('t-copy');
+        const weight = document.getElementById('weight').value;
+        const reportContainer = document.getElementById('report-container');
+        const reportTextEl = document.getElementById('report-text');
 
         if (weight > 0) {
             currentPieces = Math.round(weight / currentRatio);
             document.getElementById('res').innerText = currentPieces.toLocaleString();
-            copyBtn.disabled = false;
+            
+            // Оновлюємо та показуємо репорт
+            const lang = localStorage.getItem('bricks_lang') || 'en';
+            reportTextEl.innerText = i18n[lang]['report_tmpl'].replace('{w}', weight).replace('{p}', currentPieces);
+            reportContainer.style.display = 'block';
         } else {
             document.getElementById('res').innerText = "0";
-            copyBtn.disabled = true;
+            reportContainer.style.display = 'none';
         }
     }
 
     function copyResult() {
-        const weight = document.getElementById('weight').value;
-        if (!weight || weight <= 0) return;
-
-        const lang = localStorage.getItem('bricks_lang') || 'en';
-        const text = lang === 'ua' 
-            ? `📊 LEGO Звіт:\nВага: ${weight}г\nОрієнтовна кількість деталей: ~${currentPieces} шт.\nРозраховано через Bricks-Repo.`
-            : `📊 LEGO Report:\nWeight: ${weight}g\nEstimated parts: ~${currentPieces} pcs.\nCalculated via Bricks-Repo.`;
-
+        const text = document.getElementById('report-text').innerText;
         navigator.clipboard.writeText(text).then(() => {
             const btn = document.getElementById('t-copy');
+            const lang = localStorage.getItem('bricks_lang') || 'en';
             const originalText = i18n[lang]['t-copy'];
             btn.innerText = i18n[lang]['copied'];
             setTimeout(() => { btn.innerText = originalText; }, 2000);
@@ -179,7 +187,7 @@
             const el = document.getElementById(id);
             if (el) el.innerText = i18n[lang][id];
         }
-        calculate(); // Оновлюємо стан кнопки при зміні мови
+        calculate();
     }
 
     const savedLang = localStorage.getItem('bricks_lang') || (navigator.language.includes('uk') ? 'ua' : 'en');
