@@ -57,7 +57,8 @@ const CONFIG = {
             copied: "Copied!",
             calculate: "Calculate",
             share: "Share Result",
-            f_idea: "Have an Idea? Write to us"
+            f_idea_q: " Idea?",
+            f_idea_a: "Write to us",
         },
         ua: {
             back: "Bricks-Repo Xaб",
@@ -66,7 +67,8 @@ const CONFIG = {
             copied: "Скопійовано!",
             calculate: "Розрахувати",
             share: "Поділитися",
-            f_idea: "Маєте ідею? Напишіть нам"
+            f_idea_q: " Ідея?",
+            f_idea_a: "Напишіть нам",
         }
     }
 };
