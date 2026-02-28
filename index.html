@@ -12,7 +12,6 @@
     <script type="application/ld+json" id="ld-schema"></script>
 
     <style>
-        /* Критичні стилі для миттєвого відображення (LCP/FCP) */
         :root {
             --primary: #e3000b; --secondary: #ffdd00; --bg: #f0f2f5; --text: #1a1a1a;
             --radius-lg: 24px; --radius-md: 16px; --shadow-card: 0 10px 30px rgba(0,0,0,0.08);
@@ -51,12 +50,13 @@
         input { 
             width: 100%; box-sizing: border-box; padding: 15px; border: 2px solid #eee; 
             border-radius: var(--radius-md); font-size: 2.5rem; text-align: center; 
-            font-weight: 900; background: #fafafa; margin-bottom: 10px;
+            font-weight: 900; background: #fafafa; margin-bottom: 10px; outline: none;
         }
+        input:focus { border-color: var(--primary); }
 
         .result-box { 
             background: #1a1a1a; color: white; padding: 30px; border-radius: var(--radius-md); 
-            margin: 25px 0; min-height: 120px;
+            margin: 25px 0; min-height: 120px; position: relative;
         }
         .result { font-size: 4rem; font-weight: 900; color: var(--secondary); display: block; line-height: 1; }
 
@@ -66,9 +66,11 @@
         }
 
         .btn-copy { 
-            background: var(--secondary); color: #1a1a1a; border: none; padding: 12px; 
+            background: var(--secondary); color: #1a1a1a; border: none; padding: 14px; 
             border-radius: 10px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
         }
+        .btn-copy:active { transform: scale(0.98); }
 
         .btn-coffee { 
             display: inline-flex; align-items: center; gap: 8px; background: #ffffff; 
@@ -107,8 +109,9 @@
         <span id="t-pieces" style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.5px; opacity: 0.8;">Pieces</span>
         
         <div id="report-container" class="report-preview">
-            <div id="report-text"></div>
+            <div id="report-text" style="white-space: pre-line; margin-bottom: 10px;"></div>
             <button class="btn-copy" onclick="copyResult()" id="t-copy">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 <span id="btn-copy-text">Copy Report</span>
             </button>
         </div>
@@ -146,7 +149,8 @@
             "url": window.location.href,
             "author": { "@type": "Organization", "name": CONFIG.org_name }
         };
-        document.getElementById('ld-schema').text = JSON.stringify(schema);
+        const script = document.getElementById('ld-schema');
+        if (script) script.text = JSON.stringify(schema);
     }
 
     function calculate() {
@@ -179,20 +183,62 @@
         document.getElementById('btn-copy-text').innerText = hasConfig ? CONFIG.common_i18n[l].copy : (l === 'ua' ? 'Копіювати' : 'Copy');
         
         const ids = ['t-title', 't-desc', 't-pieces', 'm-mix', 'm-tech', 'm-small'];
-        ids.forEach(id => { document.getElementById(id).innerText = tool_i18n[l][id]; });
+        ids.forEach(id => { 
+            const el = document.getElementById(id);
+            if (el) el.innerText = tool_i18n[l][id]; 
+        });
         
         const sug = hasConfig ? CONFIG.urls.suggestion : '#';
-        document.getElementById('t-idea-wrap').innerHTML = tool_i18n[l].idea.replace('{s}', sug);
+        const ideaWrap = document.getElementById('t-idea-wrap');
+        if (ideaWrap) ideaWrap.innerHTML = tool_i18n[l].idea.replace('{s}', sug);
         calculate();
     }
 
-    // Миттєвий запуск без очікування 'load'
+    function copyResult() {
+        const textElement = document.getElementById('report-text');
+        if (!textElement) return;
+
+        const textToCopy = textElement.innerText;
+        const l = localStorage.getItem('bricks_lang') || 'en';
+        const btnText = document.getElementById('btn-copy-text');
+        const originalText = typeof CONFIG !== 'undefined' ? CONFIG.common_i18n[l].copy : "Copy Report";
+
+        function showSuccess() {
+            const successText = typeof CONFIG !== 'undefined' ? CONFIG.common_i18n[l].copied : "Copied!";
+            btnText.innerText = successText;
+            setTimeout(() => { btnText.innerText = originalText; }, 2000);
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showSuccess();
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(textToCopy).then(showSuccess).catch(() => fallbackCopy(textToCopy));
+        } else {
+            fallbackCopy(textToCopy);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         applyConfig();
         changeLang(localStorage.getItem('bricks_lang') || 'en');
     });
     
-    // Повторна спроба, якщо конфіг завантажився пізніше
     window.addEventListener('load', applyConfig);
 </script>
 </body>
