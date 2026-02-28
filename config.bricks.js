@@ -2,7 +2,7 @@ const CONFIG = {
     // 1. Ідентифікація (Core)
     branch: "bricks",
     version: "2.0.0",
-    updated: "2026-02-27",
+    updated: "2026-02-28",
     hub_url: "https://bricks-repo.github.io/",
     org_name: "ProfitRepo",
     
@@ -46,7 +46,7 @@ const CONFIG = {
     // 5. Shared i18n Interface (Глобальні елементи інтерфейсу)
     common_i18n: {
         en: {
-            back: "Back to Hub",
+            back: "Bricks-Repo Hub",
             support: "Support Project",
             copy: "Copy",
             copied: "Copied!",
@@ -54,7 +54,7 @@ const CONFIG = {
             share: "Share Result"
         },
         ua: {
-            back: "На головну",
+            back: "Bricks-Repo Xaб",
             support: "Підтримати",
             copy: "Копіювати",
             copied: "Скопійовано!",
