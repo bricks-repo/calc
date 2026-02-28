@@ -1,7 +1,7 @@
 const CONFIG = {
     // 1. Ідентифікація (Core)
     branch: "bricks",
-    version: "2.0.0",
+    version: "2.0.1",
     updated: "2026-02-28",
     hub_url: "https://bricks-repo.github.io/",
     org_name: "ProfitRepo",
@@ -51,7 +51,10 @@ const CONFIG = {
             copy: "Copy",
             copied: "Copied!",
             calculate: "Calculate",
-            share: "Share Result"
+            share: "Share Result",
+            f_title: "Suggest an Idea",
+            f_desc: "Tell us which tool you need next.",
+            f_send: "Write to Architect"
         },
         ua: {
             back: "Bricks-Repo Xaб",
@@ -59,7 +62,10 @@ const CONFIG = {
             copy: "Копіювати",
             copied: "Скопійовано!",
             calculate: "Розрахувати",
-            share: "Поділитися"
+            share: "Поділитися",
+            f_title: "Запропонувати ідею",
+            f_desc: "Напишіть, якого інструменту вам не вистачає.",
+            f_send: "Написати Архітектору"
         }
     }
 };
